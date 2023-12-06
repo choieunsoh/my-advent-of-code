@@ -2,6 +2,18 @@
 
 var trebuchet = function (input) {
   const lines = input.split('\n');
+  const digits = new Map([
+    ['on', ['one', 1]],
+    ['tw', ['two', 2]],
+    ['th', ['three', 3]],
+    ['fo', ['four', 4]],
+    ['fi', ['five', 5]],
+    ['si', ['six', 6]],
+    ['se', ['seven', 7]],
+    ['ei', ['eight', 8]],
+    ['ni', ['nine', 9]],
+  ]);
+
   let sum = 0;
   for (const line of lines) {
     const num = getDigit(line);
@@ -9,47 +21,44 @@ var trebuchet = function (input) {
   }
   return sum;
 
-  function getDigit(line) {
-    let a = -1;
-    let b = -1;
-    let left = 0;
-    let right = line.length - 1;
-    while (left <= right) {
-      if (a === -1) {
-        if (isNumber(line, left)) {
-          a = +line[left];
-        } else {
-          left++;
-        }
-      }
-
-      if (b === -1) {
-        if (isNumber(line, right)) {
-          b = +line[right];
-        } else {
-          right--;
-        }
-      }
-
-      if (a !== -1 && b !== -1) {
-        return a * 10 + b;
-      }
-    }
-  }
-
   function isNumber(line, index) {
     const code = line.charCodeAt(index);
     return code >= 48 && code <= 57;
   }
+
+  function getDigit(line) {
+    let first = null;
+    let last = null;
+    for (let i = 0; i < line.length; i++) {
+      if (isNumber(line, i)) {
+        if (!first) first = +line[i];
+        last = +line[i];
+        continue;
+      }
+
+      const ch = line.substring(i, i + 2);
+      if (!digits.has(ch)) continue;
+      const [str, num] = digits.get(ch);
+      const sub = line.substring(i, i + str.length);
+      if (sub === str) {
+        if (!first) first = num;
+        last = num;
+      }
+    }
+    return first * 10 + last;
+  }
 };
 
-console.time('day-1_part-1');
+console.time('day-1_part-2');
 
-var input = `1abc2
-pqr3stu8vwx
-a1b2c3d4e5f
-treb7uchet`;
-var expected = 142;
+var input = `two1nine
+eightwothree
+abcone2threexyz
+xtwone3four
+4nineeightseven2
+zoneight234
+7pqrstsixteen`;
+var expected = 281;
 var result = trebuchet(input);
 console.log(result, result === expected);
 
@@ -1053,8 +1062,8 @@ gqrnpz5sth
 xcsmcfour3eightts
 eight691seven8cxdbveightzv
 onenjhcd9`;
-var expected = 55002;
+var expected = 55093;
 var result = trebuchet(input);
 console.log(result, result === expected);
 
-console.timeEnd('day-1_part-1');
+console.timeEnd('day-1_part-2');
