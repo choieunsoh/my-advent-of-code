@@ -11,18 +11,21 @@ var mirageMaintenance = function (input) {
 };
 
 function getNextValue(nums) {
+  let currNums = [...nums];
   let nextNum = 0;
-  while (true) {
-    nextNum += nums[nums.length - 1];
-    let allZeroes = true;
+  let allZeroes = false;
+  while (!allZeroes) {
+    allZeroes = true;
+    nextNum += currNums[currNums.length - 1];
     const nextNums = [];
-    for (let i = 1; i < nums.length; i++) {
-      const diff = nums[i] - nums[i - 1];
+    for (let i = 1; i < currNums.length; i++) {
+      const diff = currNums[i] - currNums[i - 1];
       nextNums.push(diff);
-      allZeroes &= diff === 0;
+      if (diff !== 0) {
+        allZeroes = false;
+      }
     }
-    if (allZeroes) break;
-    nums = nextNums;
+    currNums = nextNums;
   }
   return nextNum;
 }
