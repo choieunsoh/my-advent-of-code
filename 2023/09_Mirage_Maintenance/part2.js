@@ -37,7 +37,7 @@ function getData(input) {
   return lines.map((line) => line.split(' ').map(Number));
 }
 
-console.time('day-9_part-1');
+console.time('day-9_part-2');
 
 var input = `0 3 6 9 12 15
 1 3 6 10 15 21
@@ -250,4 +250,4 @@ var expected = 913;
 var result = mirageMaintenance(input);
 console.log(result, result === expected);
 
-console.timeEnd('day-9_part-1');
+console.timeEnd('day-9_part-2');
