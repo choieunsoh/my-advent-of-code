@@ -2,6 +2,7 @@
 // https://adventofcode.com/2023/day/1
 
 var trebuchet = function (input) {
+  const numbers = '123456789';
   const lines = input.split('\n');
   let sum = 0;
   for (const line of lines) {
@@ -11,36 +12,32 @@ var trebuchet = function (input) {
   return sum;
 
   function getDigit(line) {
-    let a = -1;
-    let b = -1;
+    let firstNum = -1;
+    let lastNum = -1;
     let left = 0;
     let right = line.length - 1;
     while (left <= right) {
-      if (a === -1) {
-        if (isNumber(line, left)) {
-          a = +line[left];
+      if (firstNum === -1) {
+        const num = line[left];
+        if (numbers.includes(line[left])) {
+          firstNum = Number(line[left]);
         } else {
           left++;
         }
       }
 
-      if (b === -1) {
-        if (isNumber(line, right)) {
-          b = +line[right];
+      if (lastNum === -1) {
+        if (numbers.includes(line[right])) {
+          lastNum = Number(line[right]);
         } else {
           right--;
         }
       }
 
-      if (a !== -1 && b !== -1) {
-        return a * 10 + b;
+      if (firstNum !== -1 && lastNum !== -1) {
+        return firstNum * 10 + lastNum;
       }
     }
-  }
-
-  function isNumber(line, index) {
-    const code = line.charCodeAt(index);
-    return code >= 48 && code <= 57;
   }
 };
 
