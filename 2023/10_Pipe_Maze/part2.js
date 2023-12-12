@@ -1,75 +1,232 @@
-// Day 10: Pipe Maze - Part 1
+// Day 10: Pipe Maze - Part 2
 // https://adventofcode.com/2023/day/10
+const { createCanvas } = require('canvas');
+const fs = require('fs');
 
-var pipeMaze = function (input) {
-  const maze = input.split('\n').map((line) => line.split(''));
-  const rows = maze.length;
-  const cols = maze[0].length;
-  const steps = Array.from({ length: rows }, () => new Array(cols).fill(0));
-  const [startRow, startCol] = getStartingPoint();
+var pipeMaze = function (input, printMap, name) {
+  const inputMap = input.split('\n').map((line) => line.split(''));
 
   const DIRECTIONS = {
-    UP: new Set(['|', '7', 'F']),
-    DOWN: new Set(['|', 'L', 'J']),
-    LEFT: new Set(['-', 'F', 'L']),
-    RIGHT: new Set(['-', '7', 'J']),
+    U: { dir: [-1, 0], nextCells: new Set(['|', '7', 'F']) },
+    D: { dir: [1, 0], nextCells: new Set(['|', 'L', 'J']) },
+    L: { dir: [0, -1], nextCells: new Set(['-', 'F', 'L']) },
+    R: { dir: [0, 1], nextCells: new Set(['-', '7', 'J']) },
   };
+  const DIR = [1, 0, -1, 0, 1]; // D L U R
 
-  let result = 0;
-  const visited = new Set();
-  const startTile = getStartTile(startRow, startCol);
-  maze[startRow][startCol] = startTile;
+  const rows = inputMap.length;
+  const cols = inputMap[0].length;
+  const [startRow, startCol, startTile] = getStartingPoint(inputMap);
+  inputMap[startRow][startCol] = startTile;
 
-  let queue = [[startRow, startCol, 0]];
-  while (queue.length) {
-    const newQueue = [];
-    for (const [r, c, dist] of queue) {
-      const tile = maze[r][c];
-      visited.add(`${r},${c}`);
+  const [map] = bfsBuildStepMap(inputMap);
 
-      if (tile === 'F') {
-        moveRight(r, c, dist, newQueue);
-        moveDown(r, c, dist, newQueue);
-      } else if (tile === '7') {
-        moveLeft(r, c, dist, newQueue);
-        moveDown(r, c, dist, newQueue);
-      } else if (tile === 'L') {
-        moveRight(r, c, dist, newQueue);
-        moveUp(r, c, dist, newQueue);
-      } else if (tile === 'J') {
-        moveLeft(r, c, dist, newQueue);
-        moveUp(r, c, dist, newQueue);
-      } else if (tile === '|') {
-        moveUp(r, c, dist, newQueue);
-        moveDown(r, c, dist, newQueue);
-      } else if (tile === '-') {
-        moveLeft(r, c, dist, newQueue);
-        moveRight(r, c, dist, newQueue);
-      }
+  bfsFillBorders(map);
 
-      steps[r][c] = dist;
-      result = Math.max(result, dist);
-    }
-    queue = newQueue;
+  const doubleMap = buildDoubleMap(map);
+  bfsFloodFromBorders(doubleMap);
+
+  if (printMap) {
+    /*doubleMap.forEach((line, row) => {
+      console.log(
+        line
+          .map((c, col) => {
+            if (2 * startRow === row && 2 * startCol === col) return 'S█';
+            if (c === 0) return '★ ';
+            if (c > 0) return '██';
+            return '  ';
+          })
+          .join('')
+      );
+    });*/
+    draw(doubleMap, [startRow, startCol], name);
   }
+
+  const result = countHole(doubleMap);
   return result;
 
-  function getStartingPoint() {
-    for (let i = 0; i < rows; i++) {
-      for (let j = 0; j < cols; j++) {
-        if (maze[i][j] === 'S') {
-          return [i, j];
+  function buildDoubleMap(map) {
+    const mm = Array.from({ length: rows * 2 }, () => new Array(cols * 2).fill(-2));
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const cell = map[r][c];
+
+        if (cell === -1) {
+          mm[2 * r][2 * c] = mm[2 * r + 1][2 * c] = mm[2 * r][2 * c + 1] = mm[2 * r + 1][2 * c + 1] = -1;
+        } else if (cell > 0) {
+          const tile = inputMap[r][c];
+          switch (tile) {
+            case 'F':
+              mm[2 * r][2 * c] = mm[2 * r + 1][2 * c] = mm[2 * r][2 * c + 1] = 11;
+              break;
+            case 'L':
+              mm[2 * r][2 * c] = mm[2 * r][2 * c + 1] = 11;
+              break;
+            case 'J':
+              mm[2 * r][2 * c] = 11;
+              break;
+            case '7':
+              mm[2 * r][2 * c] = mm[2 * r + 1][2 * c] = 11;
+              break;
+            case '|':
+              mm[2 * r][2 * c] = mm[2 * r + 1][2 * c] = 11;
+              break;
+            case '-':
+              mm[2 * r][2 * c] = mm[2 * r][2 * c + 1] = 11;
+              break;
+          }
+        } else if (cell === 0) {
+          mm[2 * r][2 * c] = cell;
+        }
+      }
+    }
+    return mm;
+  }
+
+  function bfsBuildStepMap(inputMap) {
+    const rows = inputMap.length;
+    const cols = inputMap[0].length;
+    const map = Array.from({ length: rows }, () => new Array(cols).fill(0));
+
+    let maxStep = 0;
+    let queue = [[startRow, startCol, 1]];
+    const visited = new Set();
+    while (queue.length) {
+      const newQueue = [];
+      for (const [r, c, step] of queue) {
+        const tile = inputMap[r][c];
+        visited.add(r * cols + c);
+
+        if (tile === 'F') {
+          move(r, c, 'R', step, newQueue, visited);
+          move(r, c, 'D', step, newQueue, visited);
+        } else if (tile === '7') {
+          move(r, c, 'L', step, newQueue, visited);
+          move(r, c, 'D', step, newQueue, visited);
+        } else if (tile === 'L') {
+          move(r, c, 'R', step, newQueue, visited);
+          move(r, c, 'U', step, newQueue, visited);
+        } else if (tile === 'J') {
+          move(r, c, 'L', step, newQueue, visited);
+          move(r, c, 'U', step, newQueue, visited);
+        } else if (tile === '|') {
+          move(r, c, 'U', step, newQueue, visited);
+          move(r, c, 'D', step, newQueue, visited);
+        } else if (tile === '-') {
+          move(r, c, 'L', step, newQueue, visited);
+          move(r, c, 'R', step, newQueue, visited);
+        }
+
+        map[r][c] = step;
+        maxStep = Math.max(maxStep, step);
+      }
+      queue = newQueue;
+    }
+    return [map, maxStep];
+  }
+
+  function bfsFillBorders(map) {
+    const visited = new Set();
+    let queue = [];
+    for (let r = 0; r < rows; r++) {
+      for (const c of [0, cols - 1]) {
+        if (map[r][c] === 0) {
+          queue.push([r, c]);
+        }
+      }
+    }
+    for (let c = 0; c < cols; c++) {
+      for (const r of [0, rows - 1]) {
+        if (map[r][c] === 0) {
+          queue.push([r, c]);
+        }
+      }
+    }
+
+    while (queue.length) {
+      const newQueue = [];
+      for (const [r, c] of queue) {
+        visited.add(r * cols + c);
+        map[r][c] = -1;
+        for (let d = 0; d < 4; d++) {
+          const [nr, nc] = [r + DIR[d], c + DIR[d + 1]];
+          if (nr < 0 || nr >= rows || nc < 0 || nc >= cols || visited.has(nr * cols + nc)) continue;
+          if (map[nr][nc] === 0) {
+            newQueue.push([nr, nc]);
+          }
+        }
+      }
+      queue = newQueue;
+    }
+  }
+
+  function bfsFloodFromBorders(map) {
+    let queue = [];
+    const rows = map.length;
+    const cols = map[0].length;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (map[r][c] === -1) {
+          queue.push([r, c]);
+        }
+      }
+    }
+
+    const visited = new Set();
+    while (queue.length) {
+      const newQueue = [];
+      for (const [r, c] of queue) {
+        const cellKey = r * cols + c;
+        visited.add(cellKey);
+        map[r][c] = -1;
+
+        for (let d = 0; d < 4; d++) {
+          const [nr, nc] = [r + DIR[d], c + DIR[d + 1]];
+          if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+          if (visited.has(nr * cols + nc)) continue;
+
+          const nextCell = map[nr][nc];
+          if (nextCell === -1 || nextCell === -2 || map[nr][nc] === 0) {
+            newQueue.push([nr, nc]);
+            visited.add(nr * cols + nc);
+          }
+        }
+      }
+      queue = newQueue;
+    }
+  }
+
+  function countHole(map) {
+    let count = 0;
+    const rows = map.length;
+    const cols = map[0].length;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (map[r][c] === 0) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  function getStartingPoint(map) {
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (map[r][c] === 'S') {
+          const tile = getStartTile(map, r, c);
+          return [r, c, tile];
         }
       }
     }
     return [];
   }
 
-  function getStartTile(r, c) {
-    const U = canMoveUp(r, c);
-    const D = canMoveDown(r, c);
-    const L = canMoveLeft(r, c);
-    const R = canMoveRight(r, c);
+  function getStartTile(inputMap, r, c) {
+    const U = r - 1 >= 0 && DIRECTIONS.U.nextCells.has(inputMap[r - 1][c]);
+    const D = r + 1 < rows && DIRECTIONS.D.nextCells.has(inputMap[r + 1][c]);
+    const L = c - 1 >= 0 && DIRECTIONS.L.nextCells.has(inputMap[r][c - 1]);
+    const R = c + 1 < cols && DIRECTIONS.R.nextCells.has(inputMap[r][c + 1]);
 
     if (U && D) return '|';
     if (U && L) return 'J';
@@ -78,53 +235,112 @@ var pipeMaze = function (input) {
     if (D && R) return 'F';
     if (L && R) return '-';
 
-    return maze[r][c];
+    return inputMap[r][c];
   }
 
-  function canMoveRight(r, c) {
-    return c + 1 < cols && DIRECTIONS.RIGHT.has(maze[r][c + 1]) && !visited.has(`${r},${c + 1}`);
-  }
-  function canMoveLeft(r, c) {
-    return c - 1 >= 0 && DIRECTIONS.LEFT.has(maze[r][c - 1]) && !visited.has(`${r},${c - 1}`);
-  }
-  function canMoveDown(r, c) {
-    return r + 1 < rows && DIRECTIONS.DOWN.has(maze[r + 1][c]) && !visited.has(`${r + 1},${c}`);
-  }
-  function canMoveUp(r, c) {
-    return r - 1 >= 0 && DIRECTIONS.UP.has(maze[r - 1][c]) && !visited.has(`${r - 1},${c}`);
-  }
+  function move(r, c, d, step, queue, visited) {
+    const {
+      dir: [dr, dc],
+      nextCells,
+    } = DIRECTIONS[d];
 
-  function moveRight(r, c, dist, q) {
-    if (canMoveRight(r, c)) {
-      q.push([r, c + 1, dist + 1]);
-    }
-  }
-  function moveLeft(r, c, dist, q) {
-    if (canMoveLeft(r, c)) {
-      q.push([r, c - 1, dist + 1]);
-    }
-  }
-  function moveDown(r, c, dist, q) {
-    if (canMoveDown(r, c)) {
-      q.push([r + 1, c, dist + 1]);
-    }
-  }
-  function moveUp(r, c, dist, q) {
-    if (canMoveUp(r, c)) {
-      q.push([r - 1, c, dist + 1]);
-    }
+    const [nr, nc] = [r + dr, c + dc];
+    if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) return;
+    if (visited.has(nr * cols + nc)) return;
+
+    const tile = inputMap[nr][nc];
+    if (!nextCells.has(tile)) return;
+
+    queue.push([nr, nc, step + 1]);
   }
 };
 
-console.time('day-10_part-1');
+function draw(map, startPoint, name) {
+  const size = 10;
+  const rows = map.length;
+  const cols = map[0].length;
+  const width = cols * size;
+  const height = rows * size;
 
-var input = `-L|F7
-7S-7|
-L|7||
--L-J|
-L|-JF`;
+  const canvas = createCanvas(width, height);
+  const context = canvas.getContext('2d');
+
+  context.fillStyle = '#000';
+  context.fillRect(0, 0, width, height);
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const value = map[r][c];
+      if (value > 0) {
+        drawLine(r, c, '#5f9747');
+      }
+
+      if (r === startPoint[0] * 2 && c === startPoint[1] * 2) {
+        drawCircle(r, c, '#F00');
+      }
+
+      if (value === 0) {
+        drawCircle(r, c, '#FFD700');
+      }
+    }
+  }
+
+  const buffer = canvas.toBuffer('image/png');
+  fs.writeFileSync(`./image_${name}.png`, buffer);
+
+  function drawCircle(r, c, color) {
+    context.beginPath();
+    context.fillStyle = color;
+    context.arc((c + 0.5) * size, (r + 0.5) * size, size / 2, 0, 2 * Math.PI);
+    context.fill();
+  }
+
+  function drawLine(r, c, color) {
+    context.fillStyle = color;
+    context.fillRect(c * size, r * size, size, size);
+  }
+}
+
+console.time('day-10_part-2');
+
+var input = `...........
+.S-------7.
+.|F-----7|.
+.||.....||.
+.||.....||.
+.|L-7.F-J|.
+.|..|.|..|.
+.L--J.L--J.
+...........`;
 var expected = 4;
-var result = pipeMaze(input);
+var result = pipeMaze(input, true, '1');
+console.log(result, result === expected);
+
+var input = `..........
+.S------7.
+.|F----7|.
+.||....||.
+.||....||.
+.|L-7F-J|.
+.|..||..|.
+.L--JL--J.
+..........`;
+var expected = 4;
+var result = pipeMaze(input, true, '2');
+console.log(result, result === expected);
+
+var input = `FF7FSF7F7F7F7F7F---7
+L|LJ||||||||||||F--J
+FL-7LJLJ||||||LJL-77
+F--JF--7||LJLJ7F7FJ-
+L---JF-JLJ.||-FJLJJ7
+|F|F-JF---7F7-L7L|7|
+|FFJF7L7F-JF7|JL---7
+7-L-JL7||F7|L7F-7F7|
+L.L7LFJ|||||FJL7||LJ
+L7JLJL-JLJLJL--JLJ.L`;
+var expected = 10;
+var result = pipeMaze(input, true, '3');
 console.log(result, result === expected);
 
 var input = `7-F7-
@@ -132,8 +348,8 @@ var input = `7-F7-
 SJLL7
 |F--J
 LJ.LJ`;
-var expected = 8;
-var result = pipeMaze(input);
+var expected = 1;
+var result = pipeMaze(input, true, '4');
 console.log(result, result === expected);
 
 // 128 36
@@ -277,8 +493,8 @@ FL7J---JL-L--.F.L77L--FLJ|-7-J7LF----JF-7L-7F7JLJJ7|.L7|LJ-FJF7F-JL-J|F7FJL7|JLL
 F.J.||7L|..-|--JL|F--FL7FL.F.LF-L---7FJFJF7LJ|J-FL|--LLJ.JJL-J||-LJ.LLJ|L7FJL7..J-L-|-J7|F-LL|-7FLF--.F7JL-.-J.L-|LFLFJJ|LF-FJ--L7L-L|-J7F7|
 |F|FLF|F--F--J.J7||7--7|7..-.FJ.|J.||L7|FJL7FJJFFJL-7J.J-7L||F|L7FFLJ.LL7|L7FJJ7LLL7|||L.L.F||7-LFJ.LFJ-77LJJF77.LF-JF-J-FJ-LJ.|F|LF-L.LLF7J
 J-FJ.-JL|J.-L--JFJL-FJ-L|J--|LL-7.-LL-JLJ-LLJJ-L7-L7J--J-7.7--L-J-JL|-LLLJLLJ-LJ.L-LJ--..L-|-JJ-L|---|7JFL-L--J|-F-J-|-JJFJ-LJ-LL7-7LJ-7L-JJ`;
-var expected = 6856;
-var result = pipeMaze(input);
+var expected = 501;
+var result = pipeMaze(input, true, '5');
 console.log(result, result === expected);
 
-console.timeEnd('day-10_part-1');
+console.timeEnd('day-10_part-2');
