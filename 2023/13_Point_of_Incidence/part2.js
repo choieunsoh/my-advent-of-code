@@ -30,7 +30,7 @@ var pointOfIncidence = function (input) {
     let right = index;
     let count = 0;
     while (left >= 0 && right < pattern.length) {
-      count += isAlternativeReflection(pattern[left], pattern[right]);
+      count += countSmudgeReflection(pattern[left], pattern[right]);
       if (count > 1) {
         return false;
       }
@@ -40,16 +40,16 @@ var pointOfIncidence = function (input) {
     return count === 1;
   }
 
-  function isAlternativeReflection(patternLeft, patternRight) {
+  function countSmudgeReflection(patternLeft, patternRight) {
     if (patternLeft === patternRight) return 0;
 
-    let diff = 0;
+    let count = 0;
     for (let i = 0; i < patternLeft.length; i++) {
       if (patternLeft[i] !== patternRight[i]) {
-        if (++diff > 1) break;
+        if (++count > 1) break;
       }
     }
-    return diff;
+    return count;
   }
 
   function findPatternValue(pattern) {
