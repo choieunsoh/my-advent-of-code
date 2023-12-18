@@ -1,4 +1,4 @@
-// Day 18: Lavaduct Lagoon - Part 1
+// Day 18: Lavaduct Lagoon - Part 2
 // https://adventofcode.com/2023/day/18
 
 var lavaductLagoon = function (input) {
@@ -20,13 +20,15 @@ var lavaductLagoon = function (input) {
 
   function getData(input) {
     return input.split('\n').map((line) => {
-      const [direction, length, color] = line.split(' ');
-      return Number(length) * ('DR'.includes(direction) ? 1 : -1);
+      const [, , color] = line.split(' ');
+      const direction = color.substring(7, 8);
+      const length = parseInt(color.substring(2, 7), 16);
+      return length * (direction < '2' ? 1 : -1);
     });
   }
 };
 
-console.time('day-18_part-1');
+console.time('day-18_part-2');
 
 var input = `R 6 (#70c710)
 D 5 (#0dc571)
@@ -42,7 +44,7 @@ R 2 (#7807d2)
 U 3 (#a77fa3)
 L 2 (#015232)
 U 2 (#7a21e3)`;
-var expected = 62;
+var expected = 952408144115;
 var result = lavaductLagoon(input);
 console.log(result, result === expected);
 
@@ -830,8 +832,8 @@ L 6 (#4d7af2)
 U 5 (#161bf1)
 L 5 (#1edbc2)
 U 5 (#13c5c3)`;
-var expected = 36725;
+var expected = 97874103749720;
 var result = lavaductLagoon(input);
 console.log(result, result === expected);
 
-console.timeEnd('day-18_part-1');
+console.timeEnd('day-18_part-2');
