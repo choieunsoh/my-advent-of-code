@@ -1,4 +1,4 @@
-// Day 22: Sand Slabs - Part 1
+// Day 22: Sand Slabs - Part 2
 // https://adventofcode.com/2023/day/22
 // Solution: https://github.com/turtlecrab/Advent-of-Code/blob/master/2023/day22.ts
 
@@ -20,8 +20,9 @@ var sandSlabs = function (input) {
   const bricks = getData(input);
   //console.log(bricks);
 
-  const safeToRemoveAmount = fall(bricks).safeToRemoveAmount;
-  return safeToRemoveAmount;
+  const { supportedBy, supportsAbove, cantBeRemoved } = fall(bricks);
+  const fallBricks = getSumOfFallingBricks(supportedBy, supportsAbove, cantBeRemoved);
+  return fallBricks;
 
   function fall(bricks) {
     const landedBricks = [];
@@ -157,7 +158,7 @@ var sandSlabs = function (input) {
   }
 };
 
-console.time('day-22_part-1');
+console.time('day-22_part-2');
 
 var input = `1,0,1~1,2,1
 0,0,2~2,0,2
@@ -166,7 +167,7 @@ var input = `1,0,1~1,2,1
 2,0,5~2,2,5
 0,1,6~2,1,6
 1,1,8~1,1,9`;
-var expected = 5;
+var expected = 7;
 var result = sandSlabs(input);
 console.log(result, result === expected);
 
@@ -1373,8 +1374,8 @@ var input = `9,8,192~9,8,194
 0,1,135~1,1,135
 9,4,185~9,4,187
 1,3,7~3,3,7`;
-var expected = 403;
+var expected = 70189;
 var result = sandSlabs(input);
 console.log(result, result === expected);
 
-console.timeEnd('day-22_part-1');
+console.timeEnd('day-22_part-2');
