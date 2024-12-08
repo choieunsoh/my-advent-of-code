@@ -73,9 +73,8 @@ function countPatterns(grid) {
   return count;
 
   function matchesPattern(grid, startRow, startCol, pattern) {
-    for (let i = 0; i < 3; i++) {
-      for (let j = 0; j < 3; j++) {
-        if (pattern[i][j] === '.') continue;
+    for (let i = 0; i < 3; i += 2) {
+      for (let j = 0; j < 3; j += 2) {
         if (grid[startRow + i][startCol + j] !== pattern[i][j]) {
           return false;
         }

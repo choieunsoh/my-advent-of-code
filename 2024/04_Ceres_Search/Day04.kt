@@ -49,8 +49,8 @@ fun main() {
 
     fun countPatterns(grid: Array<CharArray>): Int {
         fun matchesPattern(grid: Array<CharArray>, startRow: Int, startCol: Int, pattern: Array<String>): Boolean {
-            for (i in 0..2) {
-                for (j in 0..2) {
+            for (i in 0 until 3 step 2) {
+                for (j in 0 until 3 step 2) {
                     if (pattern[i][j] == '.') continue
                     if (grid[startRow + i][startCol + j] != pattern[i][j]) {
                         return false
