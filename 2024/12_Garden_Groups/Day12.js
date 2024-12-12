@@ -23,67 +23,74 @@ function calculateTotalPrice(map, enabledDiscount, debug = false) {
       const [area, perimeter, edges] = calculate(map, visited, row, col, map[row][col]);
       const price = enabledDiscount ? edges : perimeter;
       totalPrice += area * price;
-      if (debug) console.log(map[row][col], area, perimeter, edges, area * price, totalPrice);
+      consoleLog(map[row][col], area, perimeter, edges, area * price, totalPrice);
     }
   }
   return totalPrice;
-}
 
-function calculate(map, visited, startRow, startCol, plant) {
-  const rows = map.length;
-  const cols = map[0].length;
-  const directions = [1, 0, -1, 0, 1];
+  function calculate(map, visited, startRow, startCol, plant) {
+    const rows = map.length;
+    const cols = map[0].length;
+    const directions = [1, 0, -1, 0, 1]; // D, L, U, R
+    const dirs = ['D', 'L', 'U', 'R'];
 
-  let area = 0;
-  let perimeter = 0;
-  let edgeCount = 0;
-  const edges = new Set();
+    let area = 0;
+    let perimeter = 0;
+    let edgeCount = 0;
+    const edges = new Set();
 
-  const queue = [[startRow, startCol]];
-  visited[startRow][startCol] = true;
+    const queue = [[startRow, startCol]];
+    visited[startRow][startCol] = true;
 
-  while (queue.length > 0) {
-    const [row, col] = queue.shift();
-    area++;
+    while (queue.length > 0) {
+      const [row, col] = queue.shift();
+      area++;
 
-    const neighbors = getNeighbors(row, col);
-    for (let d = 0; d < neighbors.length; d++) {
-      const [newRow, newCol] = neighbors[d];
+      const neighbors = getNeighbors(row, col);
+      for (let d = 0; d < neighbors.length; d++) {
+        const [newRow, newCol, dir] = neighbors[d];
 
-      if (!isValidPlant(newRow, newCol)) {
-        perimeter++;
+        if (!isValidPlant(newRow, newCol)) {
+          perimeter++;
 
-        const key = `${newRow},${newCol},${d}`;
-        edgeCount++;
-        edges.add(key);
+          const key = `${newRow},${newCol},${dir}`;
+          edgeCount++;
+          edges.add(key);
+          consoleLog(edgeCount, [...edges]);
 
-        const borders = getNeighbors(newRow, newCol);
-        for (const [borderRow, borderCol] of borders) {
-          const borderKey = `${borderRow},${borderCol},${d}`;
-          if (edges.has(borderKey)) {
-            edgeCount--;
+          const borders = getNeighbors(newRow, newCol);
+          for (const [borderRow, borderCol, borderDir] of borders) {
+            const borderKey = `${borderRow},${borderCol},${dir}`;
+            if (edges.has(borderKey)) {
+              edgeCount--;
+            }
+            consoleLog(edgeCount, [borderRow, borderCol, borderDir], borderKey);
           }
+        } else if (!visited[newRow][newCol]) {
+          visited[newRow][newCol] = true;
+          queue.push([newRow, newCol]);
         }
-      } else if (!visited[newRow][newCol]) {
-        visited[newRow][newCol] = true;
-        queue.push([newRow, newCol]);
       }
     }
-  }
-  return [area, perimeter, edgeCount];
+    return [area, perimeter, edgeCount];
 
-  function isValidPlant(row, col) {
-    return row >= 0 && row < rows && col >= 0 && col < cols && map[row][col] === plant;
-  }
-
-  function getNeighbors(row, col) {
-    const neighbors = [];
-    for (let d = 0; d < 4; d++) {
-      const newRow = row + directions[d];
-      const newCol = col + directions[d + 1];
-      neighbors.push([newRow, newCol]);
+    function isValidPlant(row, col) {
+      return row >= 0 && row < rows && col >= 0 && col < cols && map[row][col] === plant;
     }
-    return neighbors;
+
+    function getNeighbors(row, col) {
+      const neighbors = [];
+      for (let d = 0; d < 4; d++) {
+        const newRow = row + directions[d];
+        const newCol = col + directions[d + 1];
+        neighbors.push([newRow, newCol, dirs[d]]);
+      }
+      return neighbors;
+    }
+  }
+
+  function consoleLog(...message) {
+    if (debug) console.log(...message);
   }
 }
 
