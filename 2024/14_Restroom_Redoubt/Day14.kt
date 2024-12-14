@@ -3,6 +3,10 @@
 
 import java.io.File
 import kotlin.math.max
+import java.awt.Color
+import java.awt.Graphics2D
+import java.awt.image.BufferedImage
+import javax.imageio.ImageIO
 
 data class Robot(var x: Int, var y: Int, val dx: Int, val dy: Int)
 
@@ -67,6 +71,35 @@ fun isUniquePositions(robots: List<Robot>): Boolean {
     return positions.size == robots.size
 }
 
+fun writeSnapshot(robots: List<Robot>, wide: Int, tall: Int, seconds: Int, scale: Int = 10) {
+    val grid = Array(tall) { CharArray(wide) { '.' } }
+    robots.forEach { robot ->
+        grid[robot.y][robot.x] = '#'
+    }
+
+    val baseImage  = BufferedImage(wide, tall, BufferedImage.TYPE_INT_RGB)
+
+    for (y in 0 until tall) {
+        for (x in 0 until wide) {
+            val color = if (grid[y][x] == '.') Color.BLACK else Color.GREEN
+            baseImage .setRGB(x, y, color.rgb)
+        }
+    }
+
+    // Scale the image
+    val scaledWidth = wide * scale
+    val scaledHeight = tall * scale
+    val scaledImage = BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_RGB)
+    val g2d: Graphics2D = scaledImage.createGraphics()
+
+    // Draw the base image into the scaled image
+    g2d.drawImage(baseImage, 0, 0, scaledWidth, scaledHeight, null)
+    g2d.dispose()
+
+    val filename = "images/frame_%04d.png".format(seconds)
+    ImageIO.write(scaledImage, "png", File(filename))
+}
+
 fun part1(input: List<String>, moves: Int = 100, debug: Boolean = false): Int {
     val (robots, tall, wide) = buildRobots(input)
     val movedRobots = moveRobots(robots, moves, wide, tall)
@@ -78,7 +111,7 @@ fun part1(input: List<String>, moves: Int = 100, debug: Boolean = false): Int {
     return regions.fold(1) { factor, region -> factor * (region.size.takeIf { it > 0 } ?: 1) }
 }
 
-fun part2(input: List<String>): Int {
+fun part2(input: List<String>, scale: Int = 10): Int {
     val (robots, tall, wide) = buildRobots(input)
     var currentRobots = robots
     val patternSet = mutableMapOf<String, Pair<Int, List<Robot>>>()
@@ -94,6 +127,7 @@ fun part2(input: List<String>): Int {
                 break
             }
             patternSet[pattern] = moves to currentRobots
+            writeSnapshot(currentRobots, wide, tall, moves, scale)
         }
     }
 
