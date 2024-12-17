@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@datastructures-js/priority-queue": "5.4.0",
     "canvas": "^2.11.2"
   }
 }
