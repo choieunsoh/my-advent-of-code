@@ -18,7 +18,7 @@ function prepareData(input) {
 
 function printGrid(grid) {
   for (let i = 0; i < grid.length; i++) {
-    console.log(grid[i].join(''));
+    console.log(grid[i].join(' '));
   }
   console.log();
 }
@@ -27,7 +27,17 @@ function printFinalGrid(grid, path) {
   const clonedGrid = structuredClone(grid);
   for (let i = 0; i < path.length; i++) {
     const { y: row, x: col } = path[i];
-    clonedGrid[row][col] = '*';
+    const next = path[i + 1];
+    if (!next) {
+      const prev = path[i - 1];
+      clonedGrid[row][col] = clonedGrid[prev.y][prev.x];
+      break;
+    }
+
+    if (next.x > col) clonedGrid[row][col] = '>';
+    else if (next.x < col) clonedGrid[row][col] = '<';
+    else if (next.y > row) clonedGrid[row][col] = 'v';
+    else if (next.y < row) clonedGrid[row][col] = '^';
   }
   printGrid(clonedGrid);
 }
