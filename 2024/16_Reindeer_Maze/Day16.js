@@ -122,25 +122,8 @@ function findStartEndPoints(map) {
   return points;
 }
 
-function printPQ(moves, pq) {
-  console.log('Moves', moves);
-  const arr = pq.toArray();
-  for (let i = 0; i < arr.length; i++) {
-    const {
-      element: { path, ...rest },
-    } = arr[i];
-    console.log(i, rest);
-    path.forEach((p) => console.log(p));
-  }
-  console.log();
-}
-
 function part1({ input, debug = false }) {
   return aStarSearch(input, true, debug);
-}
-
-function part2({ input, debug = false }) {
-  return 0;
 }
 
 const filename = 'Day16';
@@ -153,10 +136,3 @@ console.log('Part 1:', part1({ input: inputDemo })); // 11048
 console.time('Part 1');
 console.log('Part 1 Test:', part1({ input: inputTest })); // 82460
 console.timeEnd('Part 1');
-/*
-console.log('Part 2:', part2({ input, debug: true })); // 618
-console.log('Part 2:', part2({ input: inputDemo, debug: true })); // 9021
-console.time('Part 2');
-console.log('Part 2 Test:', part2({ input: inputTest })); // 1446175
-console.timeEnd('Part 2');
-*/
