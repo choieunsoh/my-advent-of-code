@@ -25,4 +25,24 @@ function permutations(array) {
   return result;
 }
 
-module.exports = { readInput, readInputByDay, permutations };
+function combinations(nums, targetSum) {
+  const list = [];
+  const maxMask = 1 << nums.length;
+  for (let mask = 1; mask < maxMask; mask++) {
+    const combination = [];
+    let sum = 0;
+    for (let i = 0; i < nums.length; i++) {
+      if (mask & (1 << i)) {
+        combination.push(nums[i]);
+        sum += nums[i];
+      }
+    }
+
+    if (targetSum === undefined || sum === targetSum) {
+      list.push(combination);
+    }
+  }
+  return list;
+}
+
+module.exports = { readInput, readInputByDay, permutations, combinations };
