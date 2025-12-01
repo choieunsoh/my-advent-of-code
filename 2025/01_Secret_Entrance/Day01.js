@@ -21,15 +21,15 @@ function part1(input) {
   const START = 50;
   const rotations = prepareData(input);
 
-  let zeroCount = 0;
+  let atZeroPointCount = 0;
   let pointer = START;
   for (const steps of rotations) {
     pointer = (pointer + steps + MAX) % MAX;
     if (pointer === 0) {
-      zeroCount++;
+      atZeroPointCount++;
     }
   }
-  return zeroCount;
+  return atZeroPointCount;
 }
 
 function part2(input) {
@@ -37,20 +37,20 @@ function part2(input) {
   const START = 50;
   const rotations = prepareData(input);
 
-  let totalLaps = 0;
+  let passZeroPointCount = 0;
   let pointer = START;
   for (const rotation of rotations) {
     let steps = Math.abs(rotation);
-    const needed = rotation < 0 ? pointer || MAX : MAX - pointer;
-    const fullLap = steps >= needed ? 1 : 0;
-    if (steps >= needed) {
-      steps -= needed;
+    const neededSteps = rotation < 0 ? pointer || MAX : MAX - pointer;
+    const firstFullLap = steps >= neededSteps ? 1 : 0;
+    if (steps >= neededSteps) {
+      steps -= neededSteps;
     }
-    const laps = (steps / MAX) | 0;
-    totalLaps += fullLap + laps;
+    const extraLaps = (steps / MAX) | 0;
+    passZeroPointCount += firstFullLap + extraLaps;
     pointer = (((pointer + rotation) % MAX) + MAX) % MAX;
   }
-  return totalLaps;
+  return passZeroPointCount;
 }
 
 const filename = 'data';
