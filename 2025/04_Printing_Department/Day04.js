@@ -24,21 +24,8 @@ function part1(input, debug = false) {
       const cell = grid[row][col];
       if (cell === '.') continue;
 
-      let count = 0;
-      for (let i = -1; i <= 1; i++) {
-        for (let j = -1; j <= 1; j++) {
-          if (i === 0 && j === 0) continue;
-          const nextRow = row + i;
-          const nextCol = col + j;
-          if (nextRow < 0 || nextRow >= rows || nextCol < 0 || nextCol >= cols) continue;
-          const nextCell = grid[nextRow][nextCol];
-          if (nextCell !== '.') {
-            count++;
-          }
-        }
-      }
-
-      if (count < 4) {
+      const rolls = countSurroundingRolls(grid, row, col);
+      if (rolls < 4) {
         grid[row][col] = 'x';
         rollCount++;
       }
@@ -53,7 +40,7 @@ function part1(input, debug = false) {
   return rollCount;
 }
 
-function part2(input, debug = true) {
+function part2(input, debug = false) {
   let rollCount = 0;
   const grid = prepareData(input);
 
@@ -63,29 +50,16 @@ function part2(input, debug = true) {
   const cols = grid[0].length;
 
   let round = 0;
-  let hasRemovedRoll = true;
-  while (hasRemovedRoll) {
+  let canRemovedRolls = true;
+  while (canRemovedRolls) {
     let removedRolls = 0;
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         const cell = grid[row][col];
         if (cell === '.') continue;
 
-        let count = 0;
-        for (let i = -1; i <= 1; i++) {
-          for (let j = -1; j <= 1; j++) {
-            if (i === 0 && j === 0) continue;
-            const nextRow = row + i;
-            const nextCol = col + j;
-            if (nextRow < 0 || nextRow >= rows || nextCol < 0 || nextCol >= cols) continue;
-            const nextCell = grid[nextRow][nextCol];
-            if (nextCell !== '.') {
-              count++;
-            }
-          }
-        }
-
-        if (count < 4) {
+        const rolls = countSurroundingRolls(grid, row, col);
+        if (rolls < 4) {
           grid[row][col] = 'x';
           removedRolls++;
         }
@@ -106,11 +80,30 @@ function part2(input, debug = true) {
     }
 
     rollCount += removedRolls;
-    hasRemovedRoll = removedRolls > 0;
+    canRemovedRolls = removedRolls > 0;
 
     if (debug) console.log(++round, removedRolls, rollCount);
   }
   return rollCount;
+}
+
+function countSurroundingRolls(grid, row, col) {
+  let rolls = 0;
+  const rows = grid.length;
+  const cols = grid[0].length;
+  for (let i = -1; i <= 1; i++) {
+    for (let j = -1; j <= 1; j++) {
+      if (i === 0 && j === 0) continue;
+      const nextRow = row + i;
+      const nextCol = col + j;
+      if (nextRow < 0 || nextRow >= rows || nextCol < 0 || nextCol >= cols) continue;
+      const nextCell = grid[nextRow][nextCol];
+      if (nextCell !== '.') {
+        rolls++;
+      }
+    }
+  }
+  return rolls;
 }
 
 const filename = 'data';
