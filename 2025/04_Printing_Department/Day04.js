@@ -11,14 +11,12 @@ function prepareData(input) {
   return input.map((row) => row.split(''));
 }
 
-function part1(input, debug = false) {
-  let rollCount = 0;
+function part1(input) {
   const grid = prepareData(input);
-
-  if (debug) grid.forEach((row) => console.log(row.join('')));
-
   const rows = grid.length;
   const cols = grid[0].length;
+
+  let rollCount = 0;
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
       const cell = grid[row][col];
@@ -31,25 +29,15 @@ function part1(input, debug = false) {
       }
     }
   }
-
-  if (debug) {
-    console.log('-'.repeat(cols));
-    grid.forEach((row) => console.log(row.join('')));
-  }
-
   return rollCount;
 }
 
-function part2(input, debug = false) {
-  let rollCount = 0;
+function part2(input) {
   const grid = prepareData(input);
-
-  if (debug) grid.forEach((row) => console.log(row.join('')));
-
   const rows = grid.length;
   const cols = grid[0].length;
 
-  let round = 0;
+  let rollCount = 0;
   let canRemovedRolls = true;
   while (canRemovedRolls) {
     let removedRolls = 0;
@@ -66,11 +54,6 @@ function part2(input, debug = false) {
       }
     }
 
-    if (debug) {
-      console.log('-'.repeat(cols + 10));
-      grid.forEach((row) => console.log(row.join('')));
-    }
-
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         if (grid[row][col] === 'x') {
@@ -81,8 +64,6 @@ function part2(input, debug = false) {
 
     rollCount += removedRolls;
     canRemovedRolls = removedRolls > 0;
-
-    if (debug) console.log(++round, removedRolls, rollCount);
   }
   return rollCount;
 }
