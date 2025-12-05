@@ -13,21 +13,8 @@ function prepareData(input) {
   return { ranges, targetIds };
 }
 
-function part1(input) {
-  const { ranges, targetIds } = prepareData(input);
-  let count = 0;
-  for (const id of targetIds) {
-    if (ranges.some(([min, max]) => id >= min && id <= max)) {
-      count++;
-    }
-  }
-  return count;
-}
-
-function part2(input) {
-  const { ranges } = prepareData(input);
+function mergeRanges(ranges) {
   ranges.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-
   const merged = [];
   for (const range of ranges) {
     if (merged.length === 0 || range[0] > merged[merged.length - 1][1] + 1) {
@@ -36,10 +23,30 @@ function part2(input) {
       merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], range[1]);
     }
   }
+  return merged;
+}
 
+function part1(input) {
+  const { ranges, targetIds } = prepareData(input);
+  const mergedRanges = mergeRanges(ranges);
   let count = 0;
-  for (const [start, end] of merged) {
-    count += end - start + 1;
+  for (const id of targetIds) {
+    for (const [min, max] of mergedRanges) {
+      if (id >= min && id <= max) {
+        count++;
+        break;
+      }
+    }
+  }
+  return count;
+}
+
+function part2(input) {
+  const { ranges } = prepareData(input);
+  const mergedRanges = mergeRanges(ranges);
+  let count = 0;
+  for (const [min, max] of mergedRanges) {
+    count += max - min + 1;
   }
   return count;
 }
